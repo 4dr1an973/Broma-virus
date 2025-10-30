@@ -1,1 +1,156 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Alerta de seguridad</title>
+<style>
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{background:#07070a;color:#fff;display:flex;align-items:center;justify-content:center;padding:18px;}
+  .wrap{width:96%;max-width:640px;text-align:center;}
+  h1{font-size:1.6rem;margin-bottom:0.2rem}
+  p.lead{opacity:0.92;margin-top:0;margin-bottom:1rem}
+  .progress{background:#111;border-radius:12px;height:18px;overflow:hidden;margin:18px 0;box-shadow:inset 0 0 12px rgba(0,0,0,.6)}
+  .bar{height:100%;width:0%;background:linear-gradient(90deg,#ff3b30,#ff9a3c);transition:width 1s ease}
+  .fake-list{margin-top:8px;font-size:.95rem;opacity:.98;min-height:28px}
+  .big{font-size:0.98rem;margin-top:12px}
+  .ipbox{margin-top:10px;font-weight:700;letter-spacing:0.6px;background:rgba(255,255,255,0.04);padding:8px 12px;border-radius:8px;display:inline-block}
+  .btn{display:inline-block;margin-top:18px;padding:10px 18px;border-radius:10px;background:#111;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.06)}
+  .notice{margin-top:14px;font-size:.92rem;color:#ffd700;opacity:0.95}
+  .hidden{display:none}
+  footer{font-size:.75rem;margin-top:18px;color:#bbb}
+</style>
+</head>
+<body>
+<div class="wrap" role="main" aria-live="polite">
+  <div style="text-align:left;">
+    <h1 id="title">¡Alerta crítica de seguridad!</h1>
+    <p class="lead" id="subtitle">Actividad sospechosa detectada en este dispositivo. Escaneo en curso...</p>
+  </div>
 
+  <div class="progress" aria-hidden="true">
+    <div class="bar" id="bar"></div>
+  </div>
+
+  <div class="fake-list" id="list" aria-hidden="true"></div>
+
+  <div class="big" id="message">Analizando procesos...</div>
+
+  <!-- Aquí se mostrará la IP simulada cuando avance el escaneo -->
+  <div class="ipbox hidden" id="ipbox">IP detectada: <span id="ipaddress">192.0.2.123</span></div>
+
+  <a class="btn" id="stopBtn" href="#" role="button">Detener escaneo</a>
+
+  <div class="notice hidden" id="reveal">¡BROMA! Esto es solo una demostración inofensiva — no se borró nada.</div>
+
+  <footer id="footer">Usá esto con responsabilidad. La IP mostrada es simulada; no comparte datos reales.</footer>
+</div>
+
+<script>
+/* CONFIGURACIÓN:
+   - ipAddress: usa IPs reservadas para documentación (192.0.2.x, 198.51.100.x, 203.0.113.x)
+   - victimName: opcional, deja vacio si no queres nombre.
+   - tone: 'suave' o 'dramatico' (dramatico no contiene amenazas, solo texto más impactante)
+*/
+const config = {
+  ipAddress: "192.0.2.123", // <<--- IP simulada por defecto (DOCUMENTATION TEST-NET-1)
+  victimName: "",           // ej: "Martín"
+  tone: "dramatico",        // 'suave' o 'dramatico'
+  revealDelayMs: 1400,
+  autoStartDelay: 700
+};
+
+const bar = document.getElementById('bar');
+const list = document.getElementById('list');
+const message = document.getElementById('message');
+const reveal = document.getElementById('reveal');
+const stopBtn = document.getElementById('stopBtn');
+const ipbox = document.getElementById('ipbox');
+const ipaddress = document.getElementById('ipaddress');
+const subtitle = document.getElementById('subtitle');
+const title = document.getElementById('title');
+
+ipaddress.textContent = config.ipAddress;
+if (config.victimName) {
+  subtitle.textContent = `Actividad sospechosa detectada en el dispositivo de ${config.victimName}. Escaneo en curso...`;
+}
+
+// Mensajes según tono (NUNCA amenazamos)
+const messages = {
+  suave: [
+    "Analizando procesos...",
+    "Buscando módulos sospechosos...",
+    "Aislando elementos detectados...",
+    "Finalizando limpieza..."
+  ],
+  dramatico: [
+    "Analizando procesos... (fase 1)",
+    "Detectando vectores de fuga... (fase 2)",
+    "Recolectando metadatos públicos... (simulado)",
+    "Reportando resultados al sistema... (simulado)"
+  ]
+};
+
+const itemsBase = [
+  "Fotos_personales.jpg — archivo en cuarentena",
+  "Contactos.db — revisando",
+  "Backup_mensajes.zip — chequeando",
+  "Tokens_sesion.tmp — neutralizando",
+  "Historial_navegacion.crypt — analizando"
+];
+
+let i = 0;
+let running = true;
+
+function maybeShowIP(progress) {
+  // Mostramos la IP simulada cuando está avanzado el escaneo
+  if (progress >= 60) {
+    ipbox.classList.remove('hidden');
+  }
+}
+
+function step() {
+  if (!running) return;
+  if (i > 100) return finish();
+  bar.style.width = Math.min(i,100) + "%";
+
+  if (i % 20 === 0) {
+    const idx = Math.floor(Math.random() * itemsBase.length);
+    const prefix = i >= 80 ? "Eliminando: " : (i >= 50 ? "Aislando: " : "Detectado: ");
+    list.textContent = prefix + itemsBase[idx];
+    const stateList = messages[config.tone] || messages.suave;
+    message.textContent = stateList[Math.floor(Math.min(i,99)/25)] || stateList[0];
+  }
+
+  maybeShowIP(i);
+
+  i += Math.floor(Math.random()*12) + 6;
+  if (i <= 100) setTimeout(step, 700);
+}
+
+function finish(){
+  running = false;
+  bar.style.width = "100%";
+  message.textContent = "Acción completada.";
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = 520;
+    o.connect(ctx.destination);
+    o.start();
+    setTimeout(()=>{ o.stop(); ctx.close(); }, 160);
+  } catch(e){}
+  setTimeout(()=>{ reveal.classList.remove('hidden'); }, config.revealDelayMs);
+}
+
+stopBtn.addEventListener('click', function(e){
+  e.preventDefault();
+  i = 101;
+  finish();
+});
+
+setTimeout(step, config.autoStartDelay);
+</script>
+</body>
+</html>
